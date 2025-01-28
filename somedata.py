@@ -11,6 +11,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from huggingface_hub import HfApi, HfFolder
 from datasets import Dataset, Image as HfImage, Sequence
+from datetime import datetime
 
 DATASET_DIR = "dataset"
 IMAGES_DIR = os.path.join(DATASET_DIR, "images")
@@ -111,14 +112,18 @@ class DragDropApp(App):
             self.instructions.text = "Please enter a description for the image."
 
     def save_image_and_metadata(self, image_path, description):
-        image_name = os.path.basename(image_path)
+        # Add timestamp to the image name
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        image_name = f"{timestamp}_{os.path.basename(image_path)}"
         dest_path = os.path.join(IMAGES_DIR, image_name)
         shutil.copy(image_path, dest_path)
 
+        # Use the relative path with timestamp
         relative_path = f"images/{image_name}"
         data = {"Image_Path": [relative_path], "Description": [description]}
         df = pd.DataFrame(data)
 
+        # Append to or create the CSV file
         if os.path.exists(CSV_FILE):
             df.to_csv(CSV_FILE, mode="a", header=False, index=False)
         else:
